@@ -26,7 +26,17 @@ IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='Articles')
 CREATE TABLE Articles
     (Id INTEGER IDENTITY(1,1) PRIMARY KEY NOT NULL,
     BlogId INTEGER FOREIGN KEY (BlogId) REFERENCES Blogs(Id) NOT NULL,
+    Title VARCHAR(50) NOT NULL,
     IsBlocked BIT NOT NULL,
     Content TEXT,
+    CreatedAt DATETIME,
+    UpdatedAt DATETIME)
+
+GO
+IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='Comments')
+CREATE TABLE Comments
+    (UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL,
+    ArticleId INTEGER FOREIGN KEY (ArticleId) REFERENCES Articles(Id) NOT NULL,
+    Coment TEXT,
     CreatedAt DATETIME,
     UpdatedAt DATETIME)

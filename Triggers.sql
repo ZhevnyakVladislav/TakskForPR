@@ -33,7 +33,9 @@ AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON
     UPDATE dbo.Blogs
-    SET CreatedAt = GETDATE()
+    SET 
+		CreatedAt = GETDATE(),
+		IsPaid = 0
     WHERE ID IN (SELECT DISTINCT ID FROM Inserted);
 END
     
@@ -49,6 +51,18 @@ BEGIN
 END
 
 --Articles
+
+GO
+CREATE OR ALTER TRIGGER trigger_CheckIfArticleBlocked
+ON dbo.Articles
+AFTER INSERT 
+AS	
+	BEGIN
+		DECLARE @articleId INT
+		SET NOCOUNT ON;
+		SELECT @articleId = Id FROM inserted
+		EXEC CheckBlogForPaid @articleId
+	END
 
 GO
 CREATE OR ALTER TRIGGER trigger_SetArticleCreatedTime
@@ -70,13 +84,3 @@ BEGIN
     WHERE Id IN (SELECT DISTINCT Id FROM Inserted)
 END
 
-GO
-CREATE OR ALTER TRIGGER trigger_CheckIfArticleBlocked
-ON dbo.Articles
-AFTER INSERT AS	
-BEGIN
-	declare @articleId int
-	SET NOCOUNT ON;
-	SELECT @articleId = Id from inserted
-    execute CheckBlogForPaid @articleId
-END
