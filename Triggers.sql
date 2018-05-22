@@ -5,12 +5,10 @@ USE Task_DB;
 GO
 CREATE OR ALTER TRIGGER trigger_SetUserCreatedTime
 ON dbo.Users
-FOR INSERT AS
+AFTER INSERT AS
 BEGIN
-    SET NOCOUNT ON
-    UPDATE dbo.Users
-	SET CreatedAt = GETDATE()
-    WHERE ID IN (SELECT DISTINCT ID FROM Inserted)
+    SET NOCOUNT ON;
+    EXEC SetCreatedAt 'dbo.Users';
 END
 
 GO
@@ -18,10 +16,8 @@ CREATE OR ALTER TRIGGER trigger_SetUserUpdatedTime
 ON dbo.Users
 AFTER UPDATE AS 
 BEGIN
-    SET NOCOUNT ON
-    UPDATE dbo.Users
-    SET UpdatedAt = GETDATE()
-    WHERE ID IN (SELECT DISTINCT ID FROM Inserted)
+    SET NOCOUNT ON;
+    EXEC SetUpdatedAt 'dbo.Users';
 END
 
 --Blogs
@@ -32,11 +28,7 @@ ON dbo.Blogs
 AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON
-    UPDATE dbo.Blogs
-    SET 
-		CreatedAt = GETDATE(),
-		IsPaid = 0
-    WHERE ID IN (SELECT DISTINCT ID FROM Inserted);
+    EXEC SetCreatedAt 'dbo.Blogs';
 END
     
 GO
@@ -44,34 +36,19 @@ CREATE OR ALTER TRIGGER trigger_SetBlogUpdatedTime
 ON dbo.Blogs
 AFTER UPDATE AS 
 BEGIN
-    SET NOCOUNT ON
-    UPDATE dbo.Blogs
-    SET UpdatedAt = GETDATE()
-    WHERE ID IN (SELECT DISTINCT ID FROM Inserted)
+    SET NOCOUNT ON;
+    EXEC SetUpdatedAt 'dbo.Blogs';
 END
 
 --Articles
-
-GO
-CREATE OR ALTER TRIGGER trigger_CheckIfArticleBlocked
-ON dbo.Articles
-AFTER INSERT 
-AS	
-	BEGIN
-		DECLARE @articleId INT
-		SET NOCOUNT ON;
-		SELECT @articleId = Id FROM inserted
-		EXEC CheckBlogForPaid @articleId
-	END
 
 GO
 CREATE OR ALTER TRIGGER trigger_SetArticleCreatedTime
 ON dbo.Articles
 AFTER INSERT AS
 BEGIN
-    UPDATE dbo.Articles
-    SET CreatedAt = GETDATE()
-    WHERE Id IN (SELECT DISTINCT Id FROM Inserted);
+    SET NOCOUNT ON;
+    EXEC SetCreatedAt 'dbo.Articles';
 END
 
 GO
@@ -79,8 +56,9 @@ CREATE OR ALTER TRIGGER trigger_SetArticleUpdatedTime
 ON dbo.Articles
 AFTER UPDATE AS 
 BEGIN
-    UPDATE dbo.Articles
-    SET UpdatedAt = GETDATE()
-    WHERE Id IN (SELECT DISTINCT Id FROM Inserted)
+    SET NOCOUNT ON;
+    DECLARE @blogId INT;
+    SELECT DISTINCT @blogId = Id FROM Inserted;
+    --EXEC CheckIfBlogOverflow @blogId;
+    EXEC SetUpdatedAt 'dbo.Articles';
 END
-
