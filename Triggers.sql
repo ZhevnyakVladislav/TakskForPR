@@ -8,7 +8,9 @@ ON dbo.Users
 AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON;
-    EXEC SetCreatedAt 'dbo.Users';
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetCreatedAt 'Users', @Id;
 END
 
 GO
@@ -17,7 +19,9 @@ ON dbo.Users
 AFTER UPDATE AS 
 BEGIN
     SET NOCOUNT ON;
-    EXEC SetUpdatedAt 'dbo.Users';
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetUpdatedAt 'Users', @Id;
 END
 
 --Blogs
@@ -28,7 +32,9 @@ ON dbo.Blogs
 AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON
-    EXEC SetCreatedAt 'dbo.Blogs';
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetCreatedAt 'dbo.Blogs', @Id;
 END
     
 GO

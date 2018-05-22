@@ -11,8 +11,8 @@ CREATE OR ALTER PROCEDURE CreateUser
 AS 
 BEGIN
     INSERT INTO dbo.Users 
-	(Name, Login, Password, Email, CreatedAt) 
-	VALUES (@Name, @Login, @Password, @Email, GETDATE())	
+	(Name, Login, Password, Email) 
+	VALUES (@Name, @Login, @Password, @Email)	
 END
 
 --Blogs
@@ -24,8 +24,8 @@ CREATE OR ALTER PROCEDURE CreateBlog
 AS
 BEGIN
 	INSERT INTO dbo.Blogs 
-	(Name, UserId, CreatedAt)
-	VALUES (@Name, @UserId, GETDATE());
+	(Name, UserId)
+	VALUES (@Name, @UserId);
 END
 
 GO
@@ -48,38 +48,40 @@ AS
 BEGIN
 	DECLARE @IsBlogPaid BIT;
 	DECLARE @count INT;
-	DECLARE @IsArticleBlocked BIT;
-	SET @IsArticleBlocked = 0;
+	DECLARE @IsArticleBlocked BIT = 1;
 
 	SELECT @IsBlogPaid = IsPaid FROM dbo.Blogs WHERE Id = @BlogId;
 	SELECT @count = COUNT(*) FROM dbo.Articles WHERE BlogId = @BlogId;
 	
-	IF(IsBlogPaid = 0 AND @count > 100)
+	IF(@IsBlogPaid = 0 AND @count > 100)
 		BEGIN
-			SET @IsArticleBlocked = 0;
+			SET @IsArticleBlocked = 1;
 		END
-
+		
 	INSERT INTO dbo.Articles 
-	(BlogId, Title, Content, IsBlocked, CreatedAt)
-	VALUES (@BlogId, @Title, @Content, @IsArticleBlock, GETDATE())
+	(BlogId, Title, Content, IsBlocked)
+	VALUES (@BlogId, @Title, @Content, @IsArticleBlocked)
 END
 
 --Common
 
 GO
 CREATE OR ALTER PROCEDURE SetCreatedAt
-	(@tableName VARCHAR(20))
+	(@tableName VARCHAR(20),
+	@Id INT)
 AS
 BEGIN
-	DECLARE @Cmd nvarchar(150) = 'UPDATE QUOTENAME(@tableName) SET CreatedAt = GETDATE() WHERE ID IN (SELECT DISTINCT ID FROM Inserted);'
-	EXEC @sp_executesql @Cmd, @tableName;
+	DECLARE @Cmd nvarchar(150) = N'UPDATE' + QUOTENAME(@tableName) + 'SET CreatedAt = GETDATE() WHERE Id = ' + CAST(@Id as VARCHAR);;
+	EXEC sp_executeSQL @Cmd,  N'@tableName VARCHAR(20), @Id INT', @tableName, @Id;
+
 END
 
 GO
 CREATE OR ALTER PROCEDURE SetUpdatedAt
-	(@tableName VARCHAR(20))
+	(@tableName VARCHAR(20),
+	@Id INT)
 AS
 BEGIN
-	DECLARE @Cmd nvarchar(150) = 'UPDATE QUOTENAME(@tableName) SET CreatedAt = GETDATE() WHERE ID IN (SELECT DISTINCT ID FROM Inserted);'
-	EXEC @sp_executesql @Cmd, @tableName;
+	DECLARE @Cmd nvarchar(150) = N'UPDATE' + QUOTENAME(@tableName) + 'SET UpdatedAt = GETDATE() WHERE Id = ' + CAST(@Id as VARCHAR);
+	EXEC sp_executeSQL @Cmd,  N'@tableName VARCHAR(20), @Id INT', @tableName, @Id;
 END
