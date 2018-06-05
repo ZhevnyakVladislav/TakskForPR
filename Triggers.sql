@@ -9,7 +9,7 @@ AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON;
 	DECLARE @Id INT;
-	SELECT DISTINCT @Id = Id FROM Inserted;
+	SELECT DISTINCT @Id = Id FROM inserted;
     EXEC SetCreatedAt 'Users', @Id;
 END
 
@@ -20,7 +20,7 @@ AFTER UPDATE AS
 BEGIN
     SET NOCOUNT ON;
 	DECLARE @Id INT;
-	SELECT DISTINCT @Id = Id FROM Inserted;
+	SELECT DISTINCT @Id = Id FROM inserted;
     EXEC SetUpdatedAt 'Users', @Id;
 END
 
@@ -34,7 +34,7 @@ BEGIN
     SET NOCOUNT ON
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM Inserted;
-    EXEC SetCreatedAt 'dbo.Blogs', @Id;
+    EXEC SetCreatedAt 'Blogs', @Id;
 END
     
 GO
@@ -42,8 +42,10 @@ CREATE OR ALTER TRIGGER trigger_SetBlogUpdatedTime
 ON dbo.Blogs
 AFTER UPDATE AS 
 BEGIN
-    SET NOCOUNT ON;
-    EXEC SetUpdatedAt 'dbo.Blogs';
+	SET NOCOUNT ON;
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM inserted;
+    EXEC SetUpdatedAt 'Blogs', @Id;
 END
 
 --Articles
@@ -53,18 +55,19 @@ CREATE OR ALTER TRIGGER trigger_SetArticleCreatedTime
 ON dbo.Articles
 AFTER INSERT AS
 BEGIN
-    SET NOCOUNT ON;
-    EXEC SetCreatedAt 'dbo.Articles';
+    SET NOCOUNT ON
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetCreatedAt 'Articles', @Id;
 END
-
+    
 GO
 CREATE OR ALTER TRIGGER trigger_SetArticleUpdatedTime
 ON dbo.Articles
 AFTER UPDATE AS 
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @blogId INT;
-    SELECT DISTINCT @blogId = Id FROM Inserted;
-    --EXEC CheckIfBlogOverflow @blogId;
-    EXEC SetUpdatedAt 'dbo.Articles';
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetUpdatedAt 'Articles', @Id;
 END

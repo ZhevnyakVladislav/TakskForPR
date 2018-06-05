@@ -34,9 +34,20 @@ CREATE TABLE Articles
 
 GO
 IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='Comments')
-CREATE TABLE Comments
-    (UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL,
+CREATE TABLE Comments (
+	Id INTEGER IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL,
     ArticleId INTEGER FOREIGN KEY (ArticleId) REFERENCES Articles(Id) NOT NULL,
     Coment TEXT,
     CreatedAt DATETIME,
+    UpdatedAt DATETIME)
+
+GO
+IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='ArticleRating')
+CREATE TABLE ArticleRating (
+	Id INTEGER IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL,
+    ArticleId INTEGER FOREIGN KEY (ArticleId) REFERENCES Articles(Id) NOT NULL,
+	Mark INT CHECK (Mark >= 1 AND Mark <= 6),
+	CreatedAt DATETIME,
     UpdatedAt DATETIME)

@@ -10,9 +10,11 @@ CREATE OR ALTER PROCEDURE CreateUser
     @Email VARCHAR(50))
 AS 
 BEGIN
-    INSERT INTO dbo.Users 
-	(Name, Login, Password, Email) 
-	VALUES (@Name, @Login, @Password, @Email)	
+	SET NOCOUNT ON;
+    INSERT INTO dbo.Users (
+	Name, Login, Password, Email)
+	VALUES (@Name, @Login, @Password, @Email)
+	RETURN SCOPE_IDENTITY();	
 END
 
 --Blogs
@@ -23,9 +25,11 @@ CREATE OR ALTER PROCEDURE CreateBlog
 	@UserId INT)
 AS
 BEGIN
+	SET NOCOUNT ON;
 	INSERT INTO dbo.Blogs 
-	(Name, UserId)
-	VALUES (@Name, @UserId);
+	(Name, UserId, IsPaid)
+	VALUES (@Name, @UserId, 0);
+	RETURN SCOPE_IDENTITY();
 END
 
 GO
@@ -33,8 +37,9 @@ CREATE OR ALTER PROCEDURE PayBlog
 	(@BlogId INT)
 AS
 BEGIN
+	SET NOCOUNT ON;
 	UPDATE dbo.Blogs SET IsPaid = 1 WHERE Id = @BlogId;
-	UPDATE dbo.Articles SET IsBlocked = 1 WHERE BlogId = @BlogId;
+	UPDATE dbo.Articles SET IsBlocked = 0 WHERE BlogId = @BlogId AND IsBlocked = 1;
 END
 
 --Atricles
@@ -46,15 +51,21 @@ CREATE OR ALTER PROCEDURE CreateArticle
 	@Content TEXT)
 AS
 BEGIN
+	SET NOCOUNT ON;
 	DECLARE @IsBlogPaid BIT;
 	DECLARE @count INT;
-	DECLARE @IsArticleBlocked BIT = 1;
+	DECLARE @IsArticleBlocked BIT = 0;
 
 	SELECT @IsBlogPaid = IsPaid FROM dbo.Blogs WHERE Id = @BlogId;
 	SELECT @count = COUNT(*) FROM dbo.Articles WHERE BlogId = @BlogId;
 	
-	IF(@IsBlogPaid = 0 AND @count > 100)
+	--TODO: implement rollback if > 1000
+	--IF(@count = 5)
+		--ROLLBACK
+
+	IF(@IsBlogPaid = 0)
 		BEGIN
+		IF(@count >= 5)
 			SET @IsArticleBlocked = 1;
 		END
 		
