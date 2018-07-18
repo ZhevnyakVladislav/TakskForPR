@@ -26,9 +26,11 @@ CREATE OR ALTER PROCEDURE CreateBlog
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	INSERT INTO dbo.Blogs 
 	(Name, UserId, IsPaid)
 	VALUES (@Name, @UserId, 0);
+
 	RETURN SCOPE_IDENTITY();
 END
 
@@ -52,27 +54,69 @@ CREATE OR ALTER PROCEDURE CreateArticle
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	IF (dbo.GetFreedArticlesCount(@BlogId) >= 5) --value should be 1000
+		--ROLLBACK do not work
+
 	DECLARE @IsBlogPaid BIT;
 	DECLARE @count INT;
 	DECLARE @IsArticleBlocked BIT = 0;
-
-	SELECT @IsBlogPaid = IsPaid FROM dbo.Blogs WHERE Id = @BlogId;
-	SELECT @count = COUNT(*) FROM dbo.Articles WHERE BlogId = @BlogId;
 	
-	--TODO: implement rollback if > 1000
-	--IF(@count = 5)
-		--ROLLBACK
-
+	SELECT @IsBlogPaid = IsPaid FROM dbo.Blogs WHERE Id = @BlogId;
+	SELECT @count = dbo.GetArticlesCount(@BlogId);
+	
 	IF(@IsBlogPaid = 0)
-		BEGIN
-		IF(@count >= 5)
+		IF(@count >= 4) --value should be 100
 			SET @IsArticleBlocked = 1;
-		END
 		
 	INSERT INTO dbo.Articles 
 	(BlogId, Title, Content, IsBlocked)
 	VALUES (@BlogId, @Title, @Content, @IsArticleBlocked)
+
+	RETURN SCOPE_IDENTITY();
 END
+
+GO
+CREATE OR ALTER PROCEDURE RateArticle
+	(@articleId INT,
+	 @userId INT,
+	 @mark INT)
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	INSERT INTO dbo.ArticleRating
+	(ArticleId, UserId, Mark)
+	VALUES (@articleId, @userId, @mark);
+END
+
+GO
+CREATE OR ALTER PROCEDURE UpdateArticleAverageRating
+	(@articleId INT)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	DECLARE @rating FLOAT;
+
+	SELECT @rating = AVG(CAST(Mark as FLOAT)) FROM dbo.ArticleRating WHERE ArticleId = @articleId;
+	UPDATE dbo.Articles SET AverageRaing = @rating WHERE Id = @articleId
+END
+
+GO
+CREATE OR ALTER PROCEDURE CheckArticleCount
+	(@articleId INT)
+AS 
+BEGIN
+	SET NOCOUNT ON;
+	DECLARE @BlogId INT
+	DECLARE @ArticleCount INT;
+	SELECT @BlogId = BlogId FROM dbo.Articles WHERE Id = @articleId;
+	SELECT @ArticleCount = dbo.GetArticlesCount(@BlogId);
+
+	IF (@ArticleCount > 5)
+		ROLLBACK
+END
+
 
 --Common
 

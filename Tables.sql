@@ -1,4 +1,4 @@
-USE Task_DB;
+	USE Task_DB;
 
 GO
 IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='Users')
@@ -29,6 +29,7 @@ CREATE TABLE Articles
     Title VARCHAR(50) NOT NULL,
     IsBlocked BIT NOT NULL,
     Content TEXT,
+	AverageRaing FLOAT,
     CreatedAt DATETIME,
     UpdatedAt DATETIME)
 
@@ -46,7 +47,7 @@ GO
 IF NOT EXISTS(SELECT * FROM sysobjects WHERE name='ArticleRating')
 CREATE TABLE ArticleRating (
 	Id INTEGER IDENTITY(1,1) PRIMARY KEY NOT NULL,
-    UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL,
+    UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL UNIQUE,
     ArticleId INTEGER FOREIGN KEY (ArticleId) REFERENCES Articles(Id) NOT NULL,
 	Mark INT CHECK (Mark >= 1 AND Mark <= 6),
 	CreatedAt DATETIME,

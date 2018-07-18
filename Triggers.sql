@@ -57,7 +57,7 @@ AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON
 	DECLARE @Id INT;
-	SELECT DISTINCT @Id = Id FROM Inserted;
+	SELECT DISTINCT @Id = Id FROM Inserted;s
     EXEC SetCreatedAt 'Articles', @Id;
 END
     
@@ -70,4 +70,29 @@ BEGIN
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM Inserted;
     EXEC SetUpdatedAt 'Articles', @Id;
+END
+
+GO
+CREATE OR ALTER TRIGGER trigger_SetArticlerRatingCreatedTime
+ON dbo.ArticleRating
+AFTER INSERT AS
+BEGIN
+    SET NOCOUNT ON
+	DECLARE @Id INT;
+	DECLARE @ArticleId INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+	SELECT DISTINCT @ArticleId = ArticleId FROM Inserted;
+    EXEC SetCreatedAt 'ArticleRating', @Id;
+	EXEC UpdateArticleAverageRating @ArticleId;
+END
+    
+GO
+CREATE OR ALTER TRIGGER trigger_SetArticleRatingUpdatedTime
+ON dbo.ArticleRating
+AFTER UPDATE AS 
+BEGIN
+    SET NOCOUNT ON;
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetUpdatedAt 'ArticleRating', @Id;
 END
