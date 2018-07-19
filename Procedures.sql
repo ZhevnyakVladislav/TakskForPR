@@ -11,9 +11,11 @@ CREATE OR ALTER PROCEDURE CreateUser
 AS 
 BEGIN
 	SET NOCOUNT ON;
-    INSERT INTO dbo.Users (
-	Name, Login, Password, Email)
+
+    INSERT INTO dbo.Users 
+	(Name, Login, Password, Email)
 	VALUES (@Name, @Login, @Password, @Email)
+
 	RETURN SCOPE_IDENTITY();	
 END
 
@@ -22,7 +24,7 @@ END
 GO
 CREATE OR ALTER PROCEDURE CreateBlog
 	(@Name VARCHAR(50),
-	@UserId INT)
+	 @UserId INT)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -49,25 +51,24 @@ END
 GO
 CREATE OR ALTER PROCEDURE CreateArticle
 	(@BlogId INT,
-	@Title VARCHAR(50),
-	@Content TEXT)
+	 @Title VARCHAR(50),
+	 @Content TEXT)
 AS
 BEGIN
 	SET NOCOUNT ON;
-
-	IF (dbo.GetFreedArticlesCount(@BlogId) >= 5) --value should be 1000
-		--ROLLBACK do not work
-
-	DECLARE @IsBlogPaid BIT;
-	DECLARE @count INT;
 	DECLARE @IsArticleBlocked BIT = 0;
-	
-	SELECT @IsBlogPaid = IsPaid FROM dbo.Blogs WHERE Id = @BlogId;
-	SELECT @count = dbo.GetArticlesCount(@BlogId);
-	
-	IF(@IsBlogPaid = 0)
-		IF(@count >= 4) --value should be 100
-			SET @IsArticleBlocked = 1;
+
+	IF((SELECT IsPaid FROM Blogs WHERE Id = @BlogId) = 0)
+		IF (dbo.GetFreeArticlesCount(@BlogId) >= 5) --value should be 1000 follow the requi
+			BEGIN
+				DECLARE @fd INT;
+				--ROLLBACK
+			END
+		ELSE
+			BEGIN
+				DECLARE @fdefa INT;
+				SET @IsArticleBlocked = 1;
+			END 
 		
 	INSERT INTO dbo.Articles 
 	(BlogId, Title, Content, IsBlocked)
@@ -84,10 +85,20 @@ CREATE OR ALTER PROCEDURE RateArticle
 AS
 BEGIN
 	SET NOCOUNT ON;
-
-	INSERT INTO dbo.ArticleRating
-	(ArticleId, UserId, Mark)
-	VALUES (@articleId, @userId, @mark);
+		
+	IF NOT EXISTS(SELECT * from dbo.ArticleRating WHERE UserId = @userId)
+		BEGIN
+			INSERT INTO dbo.ArticleRating
+			(ArticleId, UserId, Mark)
+			VALUES (@articleId, @userId, @mark);
+		END
+	ELSE
+		BEGIN
+			UPDATE dbo.ArticleRating 
+			SET Mark = @mark 
+			WHERE ArticleId = @articleId AND UserId = @userId
+		END
+	EXEC UpdateArticleAverageRating @articleId;
 END
 
 GO
@@ -99,7 +110,7 @@ BEGIN
 	DECLARE @rating FLOAT;
 
 	SELECT @rating = AVG(CAST(Mark as FLOAT)) FROM dbo.ArticleRating WHERE ArticleId = @articleId;
-	UPDATE dbo.Articles SET AverageRaing = @rating WHERE Id = @articleId
+	UPDATE dbo.Articles SET AverageRating = @rating WHERE Id = @articleId
 END
 
 GO
@@ -117,7 +128,19 @@ BEGIN
 		ROLLBACK
 END
 
-
+GO
+CREATE OR ALTER PROCEDURE CommentArticle
+	(@articleId INT,
+	 @userId INT,
+	 @comment TEXT)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	
+	INSERT INTO dbo.Comments
+	(ArticleId, UserId, Coment)
+	VALUES (@articleId, @userId, @comment)
+END
 --Common
 
 GO

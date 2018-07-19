@@ -29,7 +29,7 @@ CREATE TABLE Articles
     Title VARCHAR(50) NOT NULL,
     IsBlocked BIT NOT NULL,
     Content TEXT,
-	AverageRaing FLOAT,
+	AverageRating FLOAT,
     CreatedAt DATETIME,
     UpdatedAt DATETIME)
 
@@ -49,6 +49,6 @@ CREATE TABLE ArticleRating (
 	Id INTEGER IDENTITY(1,1) PRIMARY KEY NOT NULL,
     UserId INTEGER FOREIGN KEY (UserId) REFERENCES Users(Id) NOT NULL UNIQUE,
     ArticleId INTEGER FOREIGN KEY (ArticleId) REFERENCES Articles(Id) NOT NULL,
-	Mark INT CHECK (Mark >= 1 AND Mark <= 6),
+	Mark INT NOT NULL CHECK (Mark >= 1 AND Mark <= 6),
 	CreatedAt DATETIME,
     UpdatedAt DATETIME)

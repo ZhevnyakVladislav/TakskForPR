@@ -57,7 +57,7 @@ AFTER INSERT AS
 BEGIN
     SET NOCOUNT ON
 	DECLARE @Id INT;
-	SELECT DISTINCT @Id = Id FROM Inserted;s
+	SELECT DISTINCT @Id = Id FROM Inserted;
     EXEC SetCreatedAt 'Articles', @Id;
 END
     
@@ -83,7 +83,6 @@ BEGIN
 	SELECT DISTINCT @Id = Id FROM Inserted;
 	SELECT DISTINCT @ArticleId = ArticleId FROM Inserted;
     EXEC SetCreatedAt 'ArticleRating', @Id;
-	EXEC UpdateArticleAverageRating @ArticleId;
 END
     
 GO
