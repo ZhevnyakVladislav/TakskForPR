@@ -13,8 +13,12 @@ DECLARE @email1 VARCHAR(50) = 'UserEmail' + CAST(@userCount as varchar);
 DECLARE @login2 VARCHAR(50) = 'UserLogin1' + CAST(@userCount as varchar);
 DECLARE @email2 VARCHAR(50) = 'UserEmail1' + CAST(@userCount as varchar);
 
+SELECT * FROM GetCurrentlevel();
+
 EXEC  @UserId1 = CreateUser 'UserName1', @login1,'password', @email1;
 EXEC  @UserId2 = CreateUser 'UserName2', @login2,'password', @email2;
+
+SELECT * FROM GetCurrentlevel();
 
 EXEC @blogId = CreateBlog 'Blog', @userId1;
 
@@ -25,31 +29,17 @@ EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
 EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
 EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
 EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
+--EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd'; return exception 'Can not to insert one more free article! Please, pay the blog!'
 
 EXEC CommentArticle @articleId, @UserId1, 'comment';
 
---EXEC PayBlog @blogId; it's work
+--EXEC PayBlog @blogId; --it's work
 
-SELECT * FROM GetArticlesCreatedLater(GETDATE());
+SELECT * FROM GetArticlesCreatedLater(GETDATE() - 1);
 
 EXEC RateArticle @articleId, @userId1, 4;
 EXEC RateArticle @articleId, @userId1, 2;
 EXEC RateArticle @articleId, @userId2, 1;
---EXEC RateArticle @articleId, @userId1, 4; return exception user already exists
---EXEC RateArticle @articleId, @userId1, 6; return exception value should be <5 and >1
+----EXEC RateArticle @articleId, @userId1, 4; return exception user already exists
+----EXEC RateArticle @articleId, @userId1, 6; return exception value should be <5 and >1
 
-SELECT Blogs.Id as 'Blog Id', 
-  Blogs.Name as 'Blog name',
-  Users.Login as 'User login',
-  SUM(IIF(BlogArticles.IsBlocked = 1, 1, 0)) as 'Blocked blog articles count',
-  COUNT(BlogArticles.Id) as 'Blog articles count',
-  AVG(
-    CASE 
-    WHEN BlogArticles.AverageRating IS NOT NULL 
-      THEN BlogArticles.AverageRating 
-    END) as 'Blog average rating'
-FROM Blogs
-JOIN Users ON Users.Id = Blogs.UserId
-LEFT JOIN Articles BlogArticles ON BlogArticles.BlogId = Blogs.Id
-WHERE Blogs.IsPaid = 0
-GROUP BY Blogs.Id, Blogs.Name, Users.Login;

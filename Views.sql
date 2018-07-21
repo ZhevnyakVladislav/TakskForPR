@@ -11,7 +11,7 @@ GO
 CREATE OR ALTER VIEW viewArticles
 AS 
 SELECT Articles.Title, 
-	Articles.Content, 
+	CAST(Articles.Content AS  NVARCHAR(MAX)) as 'Content', 
 	Articles.CreatedAt, 
 	Blogs.Name, 
 	Users.Login,
@@ -20,8 +20,19 @@ FROM dbo.Articles
 	JOIN Blogs ON Articles.BlogId = Blogs.Id
 	JOIN Users ON Blogs.UserId = Users.Id
 	LEFT JOIN Comments ON Comments.ArticleId = Articles.Id
-GROUP BY Articles.Title, Articles.Content, Blogs.Name;
+GROUP BY Articles.Title, CAST(Articles.Content AS  NVARCHAR(MAX)), Articles.CreatedAt, Blogs.Name, Users.Login;
 
+GO
+CREATE OR ALTER VIEW viewUsers
+AS
+SELECT Users.Id,
+	Users.Login,
+	Users.Name,
+	AVG(IIF(BlogArticles.AverageRating IS NOT NULL, BlogArticles.AverageRating, NULL)) as 'Average rating'
+FROM Users
+JOIN Blogs ON Blogs.UserId = Users.Id
+LEFT JOIN Articles BlogArticles ON BlogArticles.BlogId = Blogs.Id
+GROUP BY Users.Id, Users.Login, Users.Name;
 
 GO
 CREATE OR ALTER VIEW viewFreeBlogs
@@ -39,15 +50,3 @@ JOIN Users ON Users.Id = Blogs.UserId
 LEFT JOIN Articles BlogArticles ON BlogArticles.BlogId = Blogs.Id
 WHERE Blogs.IsPaid = 0
 GROUP BY Blogs.Id, Blogs.Name, Blogs.IsPaid, Users.Login;
-
-GO
-CREATE OR ALTER VIEW viewUsers
-AS
-SELECT Users.Id,
-	Users.Login,
-	Users.Name,
-	AVG(CASE WHEN BlogArticles.AverageRating IS NOT NULL THEN BlogArticles.AverageRating END) as 'Average rating'
-FROM Users
-JOIN Blogs ON Blogs.UserId = Users.Id
-LEFT JOIN Articles BlogArticles ON BlogArticles.BlogId = Blogs.Id
-GROUP BY Users.Id, Users.Login, Users.Name;
