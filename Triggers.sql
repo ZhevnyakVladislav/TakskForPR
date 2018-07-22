@@ -7,6 +7,7 @@ CREATE OR ALTER TRIGGER trigger_SetUserCreatedTime
 ON dbo.Users
 AFTER INSERT AS
 BEGIN
+	SELECT * FROM GetCurrentlevel();
     SET NOCOUNT ON;
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM inserted;
@@ -46,6 +47,9 @@ BEGIN
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM inserted;
     EXEC SetUpdatedAt 'Blogs', @Id;
+
+	IF(UPDATE(IsPaid))
+		EXEC UnlockActicles @Id;
 END
 
 --Articles
@@ -81,7 +85,6 @@ BEGIN
 	DECLARE @Id INT;
 	DECLARE @ArticleId INT;
 	SELECT DISTINCT @Id = Id FROM Inserted;
-	SELECT DISTINCT @ArticleId = ArticleId FROM Inserted;
     EXEC SetCreatedAt 'ArticleRating', @Id;
 END
     
@@ -94,4 +97,28 @@ BEGIN
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM Inserted;
     EXEC SetUpdatedAt 'ArticleRating', @Id;
+END
+
+--Comments
+
+GO
+CREATE OR ALTER TRIGGER trigger_SetCommentCreatedTime
+ON dbo.Comments
+AFTER INSERT AS
+BEGIN
+    SET NOCOUNT ON
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetCreatedAt 'Comments', @Id;
+END
+    
+GO
+CREATE OR ALTER TRIGGER trigger_SetCommentUpdatedTime
+ON dbo.Comments
+AFTER UPDATE AS 
+BEGIN
+    SET NOCOUNT ON;
+	DECLARE @Id INT;
+	SELECT DISTINCT @Id = Id FROM Inserted;
+    EXEC SetUpdatedAt 'Comments', @Id;
 END
