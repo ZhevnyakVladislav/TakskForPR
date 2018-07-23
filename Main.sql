@@ -1,9 +1,10 @@
-Use TASk_DB;
+Use Task_DB;
 
 DECLARE @userCount INT = 5;
 DECLARE @blogCount INT = 100;
 DECLARE @articleCount INT = 10000;
-DECLARE @i INT = 1;
+DECLARE @i INT = 0;
+DECLARE @j INT = 0;
 DECLARE @currUserCount INT;;
 
 SET NOCOUNT ON;
@@ -55,22 +56,21 @@ BEGIN
 	END
 
 	EXEC @articleId = CreateArticle @blogId, 'Article', 'Content';
-	INSERT @articleIds(id) values(@articleId);
+
+	IF(@articleId > 0)
+	BEGIN 
+		DECLARE @RandomMark INT = ROUND(((5 - 1 - 1) * RAND() + 1), 0)
+
+		EXEC RateArticle @articleId, @userId, @RandomMark;
+		
+		WHILE @j < 1000
+		BEGIN
+			SELECT TOP 1 @userId = Id FROM @userIds ORDER BY NEWID();
+			EXEC CommentArticle @articleId, @userId, 'Comment';
+		END
+	END
+
 	SET @i = @i + 1;
-END
-
-SET @i = 0;
-
-WHILE @i < @articleCount
-BEGIN
-	SELECT @articleId = Id FROM @articleIds ORDER BY Id OFFSET @i ROWS FETCH NEXT 1 ROWS ONLY;
-	SELECT TOP (1) @userId = Id FROM @userIds ORDER BY RAND();
-
-	DECLARE @RandomMark INT = ROUND(((5 - 1 - 1) * RAND() + 1), 0)
-
-	EXEC RateArticle @articleId, @userId, @RandomMark;
-	EXEC CommentArticle @articleId, @userId, 'Comment';
-	SET @i = @i + 1
 END
 
 --EXEC PayBLog @blogId;

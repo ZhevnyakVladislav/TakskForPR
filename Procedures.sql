@@ -153,6 +153,7 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 BEGIN TRY
 BEGIN TRAN
 	SET NOCOUNT ON;
+
 	UPDATE dbo.Articles SET IsBlocked = 0 WHERE BlogId = @blogId AND IsBlocked = 1;
 
 	COMMIT
@@ -192,7 +193,7 @@ BEGIN TRY
 BEGIN TRAN
 	SET NOCOUNT ON;
 		
-	IF NOT EXISTS(SELECT * from dbo.ArticleRating WHERE UserId = @userId)
+	IF NOT EXISTS(SELECT * from dbo.ArticleRating WHERE UserId = @userId AND ArticleId = @articleId)
 		INSERT INTO dbo.ArticleRating
 		(ArticleId, UserId, Mark)
 		VALUES (@articleId, @userId, @mark);
