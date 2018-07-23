@@ -1,3 +1,5 @@
+Use Task_DB;
+
 DELETE FROM dbo.ArticleRating
 DELETE FROM dbo.Comments
 DELETE FROM dbo.Articles

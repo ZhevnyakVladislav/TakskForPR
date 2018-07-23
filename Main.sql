@@ -1,45 +1,77 @@
-Use Task_DB;
+Use TASk_DB;
 
-DECLARE @userCount INT;
-DECLARE @UserId1 INT;
-DECLARE @UserId2 INT;
-DECLARE @blogId INT;
-DECLARE @articleId INT;
+DECLARE @userCount INT = 5;
+DECLARE @blogCount INT = 100;
+DECLARE @articleCount INT = 10000;
+DECLARE @i INT = 1;
+DECLARE @currUserCount INT;;
 
-SELECT @userCount = COUNT(*) FROM dbo.Users;
+SET NOCOUNT ON;
 
-DECLARE @login1 VARCHAR(50) = 'UserLogin' + CAST(@userCount as varchar);
-DECLARE @email1 VARCHAR(50) = 'UserEmail' + CAST(@userCount as varchar);
-DECLARE @login2 VARCHAR(50) = 'UserLogin1' + CAST(@userCount as varchar);
-DECLARE @email2 VARCHAR(50) = 'UserEmail1' + CAST(@userCount as varchar);
+DECLARE @userIds TABLE (Id int);
+DECLARE @blogIds TABLE (Id int);
+DECLARE @articleIds TABLE (Id int);
 
-SELECT * FROM GetCurrentlevel();
+SELECT @currUserCount = COUNT(*) FROM dbo.Users;
 
-EXEC  @UserId1 = CreateUser 'UserName1', @login1,'password', @email1;
-EXEC  @UserId2 = CreateUser 'UserName2', @login2,'password', @email2;
+WHILE  @i < @userCount
+BEGIN
+	DECLARE @userId INT;
+	DECLARE @login VARCHAR(50) = 'UserLogin' + CAST(@currUserCount + @i AS varchar);
+	DECLARE @email VARCHAR(50) = 'UserEmail' + CAST(@currUserCount + @i AS varchar);
 
-SELECT * FROM GetCurrentlevel();
+	EXEC  @userId = CreateUser 'UserName1', @login,'pASsword', @email;
+	INSERT @userIds(id) values(@userId);
+	SET @i = @i + 1;
+END
 
-EXEC @blogId = CreateBlog 'Blog', @userId1;
+SET @i = 0;
 
-EXEC @articleId = CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
-EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd';
---EXEC CreateArticle @blogId, 'Article', 'dawdawdawdawddawd'; return exception 'Can not to insert one more free article! Please, pay the blog!'
+WHILE @i < @blogCount
+BEGIN
+	DECLARE @blogId INT;
 
-EXEC CommentArticle @articleId, @UserId1, 'comment';
+	IF (@i % (@blogCount / @userCount) = 0)
+	BEGIN
+		DECLARE @offset INT = CAST(@i AS FLOAT) / 100 * @userCount;
+		SELECT @userId = Id FROM @userIds ORDER BY Id OFFSET @offset ROWS FETCH NEXT 1 ROWS ONLY;
+	END
 
---EXEC PayBlog @blogId; --it's work
+	EXEC @blogId = CreateBlog 'Blog', @userId;
+	INSERT @blogIds(id) values(@blogId);
+	SET @i = @i + 1;
+END
 
-SELECT * FROM GetArticlesCreatedLater(GETDATE() - 1);
+SET @i = 0;
 
-EXEC RateArticle @articleId, @userId1, 4;
-EXEC RateArticle @articleId, @userId1, 2;
-EXEC RateArticle @articleId, @userId2, 1;
-----EXEC RateArticle @articleId, @userId1, 4; return exception user already exists
-----EXEC RateArticle @articleId, @userId1, 6; return exception value should be <5 and >1
+WHILE @i < @articleCount
+BEGIN
+	DECLARE @articleId INT;
+
+	IF (@i % (@articleCount / @blogCount) = 0)
+	BEGIN
+		SET @offset = CAST(@i AS FLOAT) / @articleCount * @blogCount;
+		SELECT @blogId = Id FROM @blogIds ORDER BY Id OFFSET @offset ROWS FETCH NEXT 1 ROWS ONLY;
+	END
+
+	EXEC @articleId = CreateArticle @blogId, 'Article', 'Content';
+	INSERT @articleIds(id) values(@articleId);
+	SET @i = @i + 1;
+END
+
+SET @i = 0;
+
+WHILE @i < @articleCount
+BEGIN
+	SELECT @articleId = Id FROM @articleIds ORDER BY Id OFFSET @i ROWS FETCH NEXT 1 ROWS ONLY;
+	SELECT TOP (1) @userId = Id FROM @userIds ORDER BY RAND();
+
+	DECLARE @RandomMark INT = ROUND(((5 - 1 - 1) * RAND() + 1), 0)
+
+	EXEC RateArticle @articleId, @userId, @RandomMark;
+	EXEC CommentArticle @articleId, @userId, 'Comment';
+	SET @i = @i + 1
+END
+
+--EXEC PayBLog @blogId;
 

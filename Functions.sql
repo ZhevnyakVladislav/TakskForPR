@@ -38,7 +38,7 @@ BEGIN
 			SELECT Id FROM dbo.Blogs 
 				WHERE IsPaid = 0 AND UserId = (
 					SELECT UserId from dbo.Blogs
-						Where Blogs.Id = 29));
+						Where Blogs.Id = @blogId));
 
 	RETURN @count;
 END;  
