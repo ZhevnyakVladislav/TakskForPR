@@ -7,7 +7,6 @@ CREATE OR ALTER TRIGGER trigger_SetUserCreatedTime
 ON dbo.Users
 AFTER INSERT AS
 BEGIN
-	SELECT * FROM GetCurrentlevel();
     SET NOCOUNT ON;
 	DECLARE @Id INT;
 	SELECT DISTINCT @Id = Id FROM inserted;
@@ -51,6 +50,7 @@ BEGIN
 	IF(UPDATE(IsPaid))
 		EXEC UnlockActicles @Id;
 END
+
 
 --Articles
 
