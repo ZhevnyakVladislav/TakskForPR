@@ -9,6 +9,7 @@ namespace Parser
 {
     class Program
     {
+        private const string FileName = "users.csv";
         static void Main(string[] args)
         {
             var users = new List<User>
@@ -39,22 +40,18 @@ namespace Parser
                 }
             };
 
-            using (var stream = new FileStream("users.csv", FileMode.Create, FileAccess.ReadWrite))
+            using (var stream = new FileStream(FileName, FileMode.Create, FileAccess.ReadWrite))
             {
-                var serializer = new CSVSerializer(typeof(User));
+                var serializer = new CSVSerializer<User>();
                 serializer.Serialize(stream, users);
             }
 
             List<User> importedUsers = null;
-            using (var stream = new FileStream("users.csv", FileMode.Open, FileAccess.Read))
+            using (var stream = new FileStream(FileName, FileMode.Open, FileAccess.Read))
             {
-                var serializer = new CSVSerializer(typeof(User));
+                var serializer = new CSVSerializer<User>();
                 importedUsers = serializer.Deserialize(stream).Cast<User>().ToList();
-
-                
-
             }
-
 
 
             Console.ReadKey();

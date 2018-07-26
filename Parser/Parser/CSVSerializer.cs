@@ -10,19 +10,19 @@ using System.Text;
 
 namespace Parser
 {
-    public class CSVSerializer
+    public class CSVSerializer<T>
     {
         private readonly Type _type;
 
         private readonly List<PropertyInfo> _properties;
 
-        private readonly bool isSerializeble;
+        private readonly bool _isSerializable;
 
-        public CSVSerializer(Type type)
+        public CSVSerializer()
         {
-            _type = type;
+            _type = typeof(T);
             _properties = _type.GetProperties().ToList();
-            isSerializeble = _type.GetCustomAttributes(typeof(Attribute), true).Any(x => x is CSVSerializableAttribute) ? true : throw new SerializationException();
+            _isSerializable = _type.GetCustomAttributes(typeof(Attribute), true).Any(x => x is CSVSerializableAttribute) ? true : throw new SerializationException();
         }
 
         public void Serialize(Stream stream, ICollection objects)
@@ -30,7 +30,7 @@ namespace Parser
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream), $"ArgumentNull_WithParamName{(object)stream}");
 
-            if (isSerializeble)
+            if (_isSerializable)
             {
                 var sb = new StringBuilder();
                 var values = new List<string>();
